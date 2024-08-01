@@ -6,43 +6,40 @@
 #include <glm/gtc/type_ptr.hpp>
 
 // Vertex Shader source code
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n" // Input vertex attribute
-"uniform mat4 transform;\n" // Uniform matrix for transformations
-"void main()\n"
-"{\n"
-"   gl_Position = transform * vec4(aPos, 1.0);\n" // Apply transformation
-"}\0";
+const char* vertexShaderSource = R"glsl(
+#version 330 core
+layout (location = 0) in vec3 aPos;          // Input vertex attribute position
+uniform mat4 transform;                      // Uniform matrix for transformations
+void main() {
+    gl_Position = transform * vec4(aPos, 1.0); // Apply transformation to vertex position
+}
+)glsl";
 
 // Fragment Shader source code
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n" // Output fragment color
-"void main()\n"
-"{\n"
-"   FragColor = vec4(0.8f, 0.3f, 0.02f, 1.0f);\n" // Set color to a specific value
-"}\n\0";
+const char* fragmentShaderSource = R"glsl(
+#version 330 core
+out vec4 FragColor;                          // Output fragment color
+void main() {
+    FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f); // Set output color to white
+}
+)glsl";
 
-// Function to process input and update transformation matrix
+// Function to process input and update the transformation matrix
 void processInput(GLFWwindow* window, glm::mat4 &transform);
 
 int main()
 {
-    // Initialize GLFW library
+    // Initialize the GLFW library
     glfwInit();
 
-    // Specify OpenGL version 3.3 and core profile
+    // Set the OpenGL version to 3.3 and use the core profile
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Create a windowed mode window and its OpenGL context
     GLFWwindow* window = glfwCreateWindow(800, 800, "A2", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
+    // Make the window's context current
     glfwMakeContextCurrent(window);
 
     // Initialize GLEW to manage OpenGL extensions
@@ -72,11 +69,10 @@ int main()
     glDeleteShader(fragmentShader);
 
     // Define the vertices for a triangle
-    GLfloat verticesTriangle[] =
-    {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f
+    GLfloat verticesTriangle[] = {
+        -0.5f, -0.5f, 0.0f, // Bottom-left vertex
+         0.5f, -0.5f, 0.0f, // Bottom-right vertex
+         0.0f,  0.5f, 0.0f  // Top vertex
     };
 
     // Generate and bind Vertex Array Object (VAO) and Vertex Buffer Object (VBO)
@@ -92,12 +88,11 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTriangle), verticesTriangle, GL_STATIC_DRAW);
 
     // Define vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // Define the vertex attributes layout
     glEnableVertexAttribArray(0);
 
-    // Unbind the VBO and VAO to avoid unintended modifications
+    // Unbind the VBO (the VAO remains bound)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 
     // Initialize the transformation matrix to the identity matrix
     glm::mat4 transform = glm::mat4(1.0f);
@@ -109,7 +104,7 @@ int main()
         processInput(window, transform);
 
         // Clear the color buffer
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Use the shader program
@@ -135,43 +130,32 @@ int main()
     glDeleteProgram(shaderProgram);
     glfwDestroyWindow(window);
     glfwTerminate();
+
     return 0;
 }
 
-// Function to process input and update transformation matrix
+// Function to process input and update the transformation matrix
 void processInput(GLFWwindow* window, glm::mat4 &transform) {
-    // Translation distance per frame
-    const float translationDistance = 0.01f;
-    // Rotation angle in radians
-    const float rotationAngle = glm::radians(30.0f);
-    // Scaling factor per frame
-    const float scaleFactor = 1.01f;
+    const float translationDistance = 0.01f; // Translation distance per frame
+    const float rotationAngle = glm::radians(30.0f); // Rotation angle in radians
+    const float scaleFactor = 1.01f; // Scaling factor per frame
 
-    // Close window if ESC key is pressed
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    // Move up
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         transform = glm::translate(transform, glm::vec3(0.0f, translationDistance, 0.0f));
-    // Move down
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         transform = glm::translate(transform, glm::vec3(0.0f, -translationDistance, 0.0f));
-    // Move left
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         transform = glm::translate(transform, glm::vec3(-translationDistance, 0.0f, 0.0f));
-    // Move right
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         transform = glm::translate(transform, glm::vec3(translationDistance, 0.0f, 0.0f));
-    // Rotate clockwise
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         transform = glm::rotate(transform, rotationAngle, glm::vec3(0.0f, 0.0f, 1.0f));
-    // Rotate counterclockwise
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         transform = glm::rotate(transform, -rotationAngle, glm::vec3(0.0f, 0.0f, 1.0f));
-    // Scale up
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
         transform = glm::scale(transform, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
-    // Scale down
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
         transform = glm::scale(transform, glm::vec3(1.0f / scaleFactor, 1.0f / scaleFactor, 1.0f / scaleFactor));
 }
